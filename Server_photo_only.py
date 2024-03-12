@@ -126,9 +126,9 @@ def get(m_method):
     #result = dict()
     
     if m_method == 'status':
-        result = jsonresponse(0,0,0,0,0,0,"success",None)
+        result = jsonresponse(0,0,0,0,0,0,"success","None")
     else:
-        result = jsonresponse(0,0,0,0,0,0,"fail",None)
+        result = jsonresponse(0,0,0,0,0,0,"fail","None")
     return result
 
 # ============================================================== POST ===============================================================
@@ -142,7 +142,7 @@ def post(m_method):
     #check key/value
     if model_id is None:
         TRIMessage('model_id is not set')
-        result=jsonresponse(0,0,0,0,0,0,"fail",None)
+        result=jsonresponse(0,0,0,0,0,0,"fail","None")
         return result
     
     #--------------------------------------------SAVING IMAGE ON PC------------------------------------------------------------------
@@ -176,7 +176,7 @@ def post(m_method):
     # Classification
     if m_method == 'CLS':
         TRIMessage("No Classification method implemented, yet")
-        result = jsonresponse(0,0,0,0,0,0,"fail",None)
+        result = jsonresponse(0,0,0,0,0,0,"fail","None")
         
     # Detection
     elif m_method == 'DET':
@@ -186,7 +186,7 @@ def post(m_method):
     # no method
     else:
         TRIMessage("no HTTP method")
-        result = jsonresponse(0,0,0,0,0,0,"fail",None)
+        result = jsonresponse(0,0,0,0,0,0,"fail","None")
         with open('json.txt', 'a') as f:
             f.write('\n')
             f.write((str(result)))
