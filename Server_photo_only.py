@@ -65,10 +65,52 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def UndistAndRect(img, stereomap_x, stereomap_y):
-    frame = cv2.remap(img, stereomap_x, stereomap_y, cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
-    return frame
+def jsonresponse(cx,cy,box_w, box_h, task, theta, message, output):
+    #type check
+    if type(cx) != int:
+        print("cx has to be an integer number")
+        cx = int(cx)
+    if type(cy) != int:
+        print("cy has to be an integer number")
+        cy = int(cy)
+    if type(box_w) != float:
+        print("box_w has to be a float number")
+        box_w = float(box_w)
+    if type(box_h) != int:
+        print("box_h has to be a float number")
+        box_h = float(box_h)
+    if type(task) != str :
+        print("task has to be a string")
+        task = str(task)
+    if type(theta) != float:
+        print("theta has to be a float number")
+        theta = float(theta)
+    if message != "success" and message != "fail":
+        print("message has to be a string containing either success or fail")
+        return redirect(request.url)
+    if cx == 0 and cy == 0 and box_w == 0 and box_h == 0: #used when the json contains a failure
+        result = { 
+                    "message": message,
+                    "result" : output
+                }
+        return result
+    result = {
+            "message": "success", #This message has to be either "success" or "fail"...
+            "annotations":[
+                {
+                    "box_cx": float(str(cx)),
+                    "box_cy": float(str(cy)),
+                    "box_w": float(str(box_w)),
+                    "box_h": float(str(box_h)),
+                    "label": str(task),
+                    "score": float(str(1.000)),
+                    "rotation": float(str(theta))
 
+                }
+            ],
+            "result": str(output) #"Image if success, None if fail...."
+        }
+    return jsonify(result)
 
 # =========================================================== GET ===================================================================
 
@@ -81,18 +123,12 @@ def index():
 #dummy GET to try the connection over the TM robot side in the vision node settings
 def get(m_method):
     # user defined method
-    result = dict()
-
+    #result = dict()
+    
     if m_method == 'status':
-        result = {
-            "result": "status",
-            "message": "im ok"
-        }
+        result = jsonresponse(0,0,0,0,0,0,"success",None)
     else:
-        result = {
-            "result": "fail",
-            "message": "wrong request"
-        }
+        result = jsonresponse(0,0,0,0,0,0,"fail",None)
     return result
 
 # ============================================================== POST ===============================================================
@@ -106,11 +142,8 @@ def post(m_method):
     #check key/value
     if model_id is None:
         TRIMessage('model_id is not set')
-        result={                    
-            "message": "fail",
-            "result": "model_id required"
-        }
-        return jsonify(result)
+        result=jsonresponse(0,0,0,0,0,0,"fail",None)
+        return result
     
     #--------------------------------------------SAVING IMAGE ON PC------------------------------------------------------------------
     if 'file' not in request.files:
@@ -317,43 +350,24 @@ def post(m_method):
  #-------------------------------------------------PILING RESULTS IN JSON FORMAT TO SEND BACK TO ROBOT-----------------------------------------
     # Classification
     if m_method == 'CLS':
-
-        result = {
-            "message": "No Classification method implemented, yet"
-            }
+        TRIMessage("No Classification method implemented, yet")
+        result = jsonresponse(0,0,0,0,0,0,"fail",None)
         
     # Detection
     elif m_method == 'DET':
-            
-        result = {
-            "message":"success",
-            "annotations":[
-                {
-                    "box_cx": float(str(cx)),
-                    "box_cy": float(str(cy)),
-                    "box_w": float(str(box_w)),
-                    "box_h": float(str(box_h)),
-                    "label": str(label),
-                    "score": float(str(1.000)),
-                    "rotation": float(str(theta))
-
-                }
-            ],
-            "result": "Image" + filename
-        }
+        
+        result = jsonresponse(float(cx),float(cy),float(box_w),float(box_h),str(label),float(theta),"success","Image")
             
     # no method
     else:
-        result = {            
-            "message": "no method",
-            "result": None            
-        }   
+        TRIMessage("no HTTP method")
+        result = jsonresponse(0,0,0,0,0,0,"fail",None)
         with open('json.txt', 'a') as f:
             f.write('\n')
             f.write((str(result)))
             f.close()
     
-    return jsonify(result) 
+    return result 
     
 
 # ============================== ENTRY POINT =========================================================================================================================================================================================================================
